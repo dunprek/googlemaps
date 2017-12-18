@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">googlemaps</string>
+    <string name="api_key">AIzaSyAI_MBWlILbjKd0hAvKKnmdiowP9WNGU3o</string>
+    <string name="btn_map">Map</string>
+    <string name="btn_satelite">Satelite</string>
+    <string name="btn_terrain">Terrain</string>
+</resources>
