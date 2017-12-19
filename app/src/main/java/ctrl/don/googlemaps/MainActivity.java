@@ -21,8 +21,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleMap.OnMarkerClickListener,
-        GoogleMap.OnInfoWindowClickListener, OnMapReadyCallback {
+        GoogleMap.OnMarkerClickListener, OnMapReadyCallback,GoogleMap.OnInfoWindowClickListener {
 
     public static final String DUBLIN = "DUBLIN";
     public static final String TOKYO = "TOKYO";
@@ -35,26 +34,29 @@ public class MainActivity extends AppCompatActivity implements
     LatLng dublin = new LatLng(53.3478, -6.2597);
     LatLng seattle = new LatLng(47.6204, -122.3491);
     LatLng newYork = new LatLng(40.784, -73.9857);
+    LatLng newYork1 = new LatLng(40.770, -73.9857);
+    LatLng newYork2 = new LatLng(40.784, -73.9850);
+    LatLng newYork3 = new LatLng(40.720, -73.9820);
+    LatLng newYork4 = new LatLng(40.710, -73.9810);
     LatLng tokyo = new LatLng(35.6895, 139.6917);
 
 
     private ViewGroup infoWindow;
     private TextView infoTitle;
-    private TextView infoSnippet;
     private Button infoButton;
     private OnInfoWindowElemTouchListener infoButtonListener;
 
+    MapWrapperLayout mapWrapperLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
-        final MapWrapperLayout mapWrapperLayout = (MapWrapperLayout) findViewById(R.id.map_relative_layout);
-
+        mapWrapperLayout = (MapWrapperLayout) findViewById(R.id.map_relative_layout);
         mapWrapperLayout.init(m_map, getPixelsFromDp(this, 39 + 20));
-
 
         Button btnMap = (Button) findViewById(R.id.btn_map);
         btnMap.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements
             public void onClick(View v) {
                 if (mapReady)
                     flyTo(myCustomLocation(tokyo, 15, 40));
-
 //                    m_map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
             }
         });
@@ -90,13 +91,13 @@ public class MainActivity extends AppCompatActivity implements
 
         // We want to reuse the info window for all the markers,
         // so let's create only one class member instance
-        this.infoWindow = (ViewGroup) getLayoutInflater().inflate(R.layout.item_info_window, null);
-        this.infoTitle = (TextView) infoWindow.findViewById(R.id.tv_title);
+        infoWindow = (ViewGroup) getLayoutInflater().inflate(R.layout.item_info_window, null);
+        infoTitle = (TextView) infoWindow.findViewById(R.id.tv_title);
 
-        this.infoButton = (Button) infoWindow.findViewById(R.id.btn_order);
+        infoButton = (Button) infoWindow.findViewById(R.id.btn_order);
         // Setting custom OnTouchListener which deals with the pressed state
         // so it shows up
-        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoButton,
+            infoButtonListener = new OnInfoWindowElemTouchListener(infoButton,
                 getResources().getDrawable(android.R.drawable.btn_default),
                 getResources().getDrawable(android.R.drawable.btn_default_small)) {
             @Override
@@ -105,30 +106,7 @@ public class MainActivity extends AppCompatActivity implements
                 Toast.makeText(MainActivity.this, marker.getTitle() + "'s button clicked!", Toast.LENGTH_SHORT).show();
             }
         };
-        this.infoButton.setOnTouchListener(infoButtonListener);
-
-
-        m_map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-            @Override
-            public View getInfoWindow(Marker marker) {
-                return null;
-            }
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                // Setting up the infoWindow with current's marker info
-                infoTitle.setText(marker.getTitle());
-                infoSnippet.setText(marker.getSnippet());
-                infoButtonListener.setMarker(marker);
-
-                // We must call this to set the current marker and infoWindow references
-                // to the MapWrapperLayout
-                mapWrapperLayout.setMarkerWithInfoWindow(marker, infoWindow);
-                return infoWindow;
-            }
-        });
-
-
+        infoButton.setOnTouchListener(infoButtonListener);
     }
 
     @Override
@@ -136,12 +114,19 @@ public class MainActivity extends AppCompatActivity implements
         mapReady = true;
         m_map = googleMap;
         m_map.setOnMarkerClickListener(this);
-        m_map.setOnInfoWindowClickListener(this);
+//        m_map.setOnInfoWindowClickListener(this);
         m_map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         m_map.addMarker(myCustomMarker(dublin, DUBLIN));
         m_map.addMarker(myCustomMarker(tokyo, TOKYO));
         m_map.addMarker(myCustomMarker(seattle, SEATTLE));
         m_map.addMarker(myCustomMarker(newYork, NEWYORK));
+        m_map.addMarker(myCustomMarker(newYork1, NEWYORK));
+        m_map.addMarker(myCustomMarker(newYork2, NEWYORK));
+        m_map.addMarker(myCustomMarker(newYork3, NEWYORK));
+        m_map.addMarker(myCustomMarker(newYork4, NEWYORK));
+
+        m_map.setInfoWindowAdapter(new PopupAdapter(getLayoutInflater()));
+        m_map.setOnInfoWindowClickListener(this);
 
         flyTo(myCustomLocation(newYork, 15, 90));
     }
@@ -174,26 +159,19 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onMarkerClick(Marker marker) {
         switch (marker.getTitle()) {
             case TOKYO:
-                Toast.makeText(MainActivity.this, "TOKYO", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this, "TOKYO", Toast.LENGTH_SHORT).show();
                 break;
             case DUBLIN:
-                Toast.makeText(MainActivity.this, "DUBLIN", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this, "DUBLIN", Toast.LENGTH_SHORT).show();
                 break;
             case NEWYORK:
-                Toast.makeText(MainActivity.this, "NEWYORK", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this, "NEWYORK", Toast.LENGTH_SHORT).show();
                 break;
             case SEATTLE:
-                Toast.makeText(MainActivity.this, "SEATTLE", Toast.LENGTH_SHORT).show();
-
+//                Toast.makeText(MainActivity.this, "SEATTLE", Toast.LENGTH_SHORT).show();
                 break;
         }
         return false;
-    }
-
-
-    @Override
-    public void onInfoWindowClick(Marker marker) {
-
     }
 
     public static int getPixelsFromDp(Context context, float dp) {
@@ -201,4 +179,8 @@ public class MainActivity extends AppCompatActivity implements
         return (int) (dp * scale + 0.5f);
     }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(this, marker.getTitle(), Toast.LENGTH_LONG).show();
+    }
 }
