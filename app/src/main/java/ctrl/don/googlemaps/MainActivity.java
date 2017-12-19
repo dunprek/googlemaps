@@ -20,8 +20,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity implements
-        GoogleMap.OnMarkerClickListener, OnMapReadyCallback,GoogleMap.OnInfoWindowClickListener {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
 
     public static final String DUBLIN = "DUBLIN";
     public static final String TOKYO = "TOKYO";
@@ -34,19 +33,21 @@ public class MainActivity extends AppCompatActivity implements
     LatLng dublin = new LatLng(53.3478, -6.2597);
     LatLng seattle = new LatLng(47.6204, -122.3491);
     LatLng newYork = new LatLng(40.784, -73.9857);
-    LatLng newYork1 = new LatLng(40.770, -73.9857);
-    LatLng newYork2 = new LatLng(40.784, -73.9850);
-    LatLng newYork3 = new LatLng(40.720, -73.9820);
-    LatLng newYork4 = new LatLng(40.710, -73.9810);
     LatLng tokyo = new LatLng(35.6895, 139.6917);
 
 
     private ViewGroup infoWindow;
     private TextView infoTitle;
+    private TextView infoSnippet;
     private Button infoButton;
     private OnInfoWindowElemTouchListener infoButtonListener;
 
     MapWrapperLayout mapWrapperLayout;
+
+
+    //set three button variable
+    Button btnMap, btnSatellite, btnHybrid;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,86 +56,106 @@ public class MainActivity extends AppCompatActivity implements
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        mapWrapperLayout = (MapWrapperLayout) findViewById(R.id.map_relative_layout);
-        mapWrapperLayout.init(m_map, getPixelsFromDp(this, 39 + 20));
+        btnMap = (Button) findViewById(R.id.btn_map);
+        btnMap.setOnClickListener(this);
 
-        Button btnMap = (Button) findViewById(R.id.btn_map);
-        btnMap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mapReady)
-                    flyTo(myCustomLocation(dublin, 15, 10));
-//                    m_map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            }
-        });
+        btnSatellite = (Button) findViewById(R.id.btn_satelite);
+        btnSatellite.setOnClickListener(this);
 
-        Button btnSatellite = (Button) findViewById(R.id.btn_satelite);
-        btnSatellite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mapReady)
-                    flyTo(myCustomLocation(seattle, 15, 30));
-//                    m_map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-            }
-        });
-
-        Button btnHybrid = (Button) findViewById(R.id.btn_hybrid);
-        btnHybrid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mapReady)
-                    flyTo(myCustomLocation(tokyo, 15, 40));
-//                    m_map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-            }
-        });
-
-
-        // We want to reuse the info window for all the markers,
-        // so let's create only one class member instance
-        infoWindow = (ViewGroup) getLayoutInflater().inflate(R.layout.item_info_window, null);
-        infoTitle = (TextView) infoWindow.findViewById(R.id.tv_title);
-
-        infoButton = (Button) infoWindow.findViewById(R.id.btn_order);
-        // Setting custom OnTouchListener which deals with the pressed state
-        // so it shows up
-            infoButtonListener = new OnInfoWindowElemTouchListener(infoButton,
-                getResources().getDrawable(android.R.drawable.btn_default),
-                getResources().getDrawable(android.R.drawable.btn_default_small)) {
-            @Override
-            protected void onClickConfirmed(View v, Marker marker) {
-                // Here we can perform some action triggered after clicking the button
-                Toast.makeText(MainActivity.this, marker.getTitle() + "'s button clicked!", Toast.LENGTH_SHORT).show();
-            }
-        };
-        infoButton.setOnTouchListener(infoButtonListener);
+        btnHybrid = (Button) findViewById(R.id.btn_hybrid);
+        btnHybrid.setOnClickListener(this);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapReady = true;
         m_map = googleMap;
-        m_map.setOnMarkerClickListener(this);
-//        m_map.setOnInfoWindowClickListener(this);
         m_map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        m_map.getUiSettings().setZoomControlsEnabled(true);
+
         m_map.addMarker(myCustomMarker(dublin, DUBLIN));
         m_map.addMarker(myCustomMarker(tokyo, TOKYO));
         m_map.addMarker(myCustomMarker(seattle, SEATTLE));
         m_map.addMarker(myCustomMarker(newYork, NEWYORK));
-        m_map.addMarker(myCustomMarker(newYork1, NEWYORK));
-        m_map.addMarker(myCustomMarker(newYork2, NEWYORK));
-        m_map.addMarker(myCustomMarker(newYork3, NEWYORK));
-        m_map.addMarker(myCustomMarker(newYork4, NEWYORK));
 
-        m_map.setInfoWindowAdapter(new PopupAdapter(getLayoutInflater()));
-        m_map.setOnInfoWindowClickListener(this);
 
+        //final MapFragment mapFragment = (MapFragment)getFragmentManager().findFragmentById(R.id.map);
+        final MapWrapperLayout mapWrapperLayout = (MapWrapperLayout)findViewById(R.id.map_relative_layout);
+        //final GoogleMap map = mapFragment.getMap();
+
+        // MapWrapperLayout initialization
+        // 39 - default marker height
+        // 20 - offset between the default InfoWindow bottom edge and it's content bottom edge
+        mapWrapperLayout.init(m_map, getPixelsFromDp(this, 39 + 20));
+
+
+        // We want to reuse the info window for all the markers,
+        // so let's create only one class member instance
+        this.infoWindow = (ViewGroup)getLayoutInflater().inflate(R.layout.item_info_window, null);
+        this.infoTitle = (TextView)infoWindow.findViewById(R.id.tv_title);
+        this.infoButton = (Button)infoWindow.findViewById(R.id.btn_order);
+
+        // Setting custom OnTouchListener which deals with the pressed state
+        // so it shows up
+        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoButton,
+                getResources().getDrawable(R.drawable.round_but_green_sel), //btn_default_normal_holo_light
+                getResources().getDrawable(R.drawable.round_but_red_sel)) //btn_default_pressed_holo_light
+        {
+            @Override
+            protected void onClickConfirmed(View v, Marker marker) {
+                // Here we can perform some action triggered after clicking the button
+                Toast.makeText(MainActivity.this, marker.getTitle() + "'s button clicked!", Toast.LENGTH_SHORT).show();
+            }
+        };
+        this.infoButton.setOnTouchListener(infoButtonListener);
+        m_map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                // Setting up the infoWindow with current's marker info
+                infoTitle.setText(marker.getTitle());
+                infoButtonListener.setMarker(marker);
+
+                // We must call this to set the current marker and infoWindow references
+                // to the MapWrapperLayout
+                mapWrapperLayout.setMarkerWithInfoWindow(marker, infoWindow);
+                return infoWindow;
+            }
+        });
         flyTo(myCustomLocation(newYork, 15, 90));
+    }
+
+
+    public static int getPixelsFromDp(Context context, float dp) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dp * scale + 0.5f);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_map:
+                if (mapReady)
+                    flyTo(myCustomLocation(dublin, 15, 10));
+                break;
+            case R.id.btn_hybrid:
+                if (mapReady)
+                    flyTo(myCustomLocation(seattle, 15, 10));
+                break;
+            case R.id.btn_satelite:
+                if (mapReady)
+                    flyTo(myCustomLocation(tokyo, 15, 40));
+                break;
+        }
     }
 
     private void flyTo(CameraPosition target) {
 //        m_map.animateCamera(CameraUpdateFactory.newCameraPosition(target));
         m_map.animateCamera(CameraUpdateFactory.newCameraPosition(target), 5000, null);
-
     }
 
     @NonNull
@@ -154,33 +175,4 @@ public class MainActivity extends AppCompatActivity implements
                 .title(title);
     }
 
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        switch (marker.getTitle()) {
-            case TOKYO:
-//                Toast.makeText(MainActivity.this, "TOKYO", Toast.LENGTH_SHORT).show();
-                break;
-            case DUBLIN:
-//                Toast.makeText(MainActivity.this, "DUBLIN", Toast.LENGTH_SHORT).show();
-                break;
-            case NEWYORK:
-//                Toast.makeText(MainActivity.this, "NEWYORK", Toast.LENGTH_SHORT).show();
-                break;
-            case SEATTLE:
-//                Toast.makeText(MainActivity.this, "SEATTLE", Toast.LENGTH_SHORT).show();
-                break;
-        }
-        return false;
-    }
-
-    public static int getPixelsFromDp(Context context, float dp) {
-        final float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dp * scale + 0.5f);
-    }
-
-    @Override
-    public void onInfoWindowClick(Marker marker) {
-        Toast.makeText(this, marker.getTitle(), Toast.LENGTH_LONG).show();
-    }
 }
