@@ -1,17 +1,8 @@
 package ctrl.don.googlemaps;
 
-import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -20,13 +11,22 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
+import android.os.Bundle;
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     public static final String DUBLIN = "DUBLIN";
     public static final String TOKYO = "TOKYO";
     public static final String SEATTLE = "SEATTLE";
     public static final String NEWYORK = "NEWYORK";
-    GoogleMap m_map;
     boolean mapReady = false;
 
 
@@ -38,11 +38,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ViewGroup infoWindow;
     private TextView infoTitle;
-    private TextView infoSnippet;
     private Button infoButton;
     private OnInfoWindowElemTouchListener infoButtonListener;
 
-    MapWrapperLayout mapWrapperLayout;
+    GoogleMap mMaps;
+
 
 
     //set three button variable
@@ -55,28 +55,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        btnMap = (Button) findViewById(R.id.btn_map);
-        btnMap.setOnClickListener(this);
-
-        btnSatellite = (Button) findViewById(R.id.btn_satelite);
-        btnSatellite.setOnClickListener(this);
-
-        btnHybrid = (Button) findViewById(R.id.btn_hybrid);
-        btnHybrid.setOnClickListener(this);
+//
+//        btnMap = (Button) findViewById(R.id.btn_map);
+//        btnMap.setOnClickListener(this);
+//
+//        btnSatellite = (Button) findViewById(R.id.btn_satelite);
+//        btnSatellite.setOnClickListener(this);
+//
+//        btnHybrid = (Button) findViewById(R.id.btn_hybrid);
+//        btnHybrid.setOnClickListener(this);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapReady = true;
-        m_map = googleMap;
-        m_map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        m_map.getUiSettings().setZoomControlsEnabled(true);
+        mMaps = googleMap;
+        mMaps.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMaps.getUiSettings().setZoomControlsEnabled(true);
 
-        m_map.addMarker(myCustomMarker(dublin, DUBLIN));
-        m_map.addMarker(myCustomMarker(tokyo, TOKYO));
-        m_map.addMarker(myCustomMarker(seattle, SEATTLE));
-        m_map.addMarker(myCustomMarker(newYork, NEWYORK));
+        mMaps.addMarker(myCustomMarker(dublin, DUBLIN));
+        mMaps.addMarker(myCustomMarker(tokyo, TOKYO));
+        mMaps.addMarker(myCustomMarker(seattle, SEATTLE));
+        mMaps.addMarker(myCustomMarker(newYork, NEWYORK));
 
 
         //final MapFragment mapFragment = (MapFragment)getFragmentManager().findFragmentById(R.id.map);
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // MapWrapperLayout initialization
         // 39 - default marker height
         // 20 - offset between the default InfoWindow bottom edge and it's content bottom edge
-        mapWrapperLayout.init(m_map, getPixelsFromDp(this, 39 + 20));
+        mapWrapperLayout.init(googleMap, getPixelsFromDp(this, 39 + 20));
 
 
         // We want to reuse the info window for all the markers,
@@ -97,7 +97,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Setting custom OnTouchListener which deals with the pressed state
         // so it shows up
-        this.infoButtonListener = new OnInfoWindowElemTouchListener(infoButton,
+        this.infoButtonListener =
+                new OnInfoWindowElemTouchListener(infoButton,
                 getResources().getDrawable(R.drawable.round_but_green_sel), //btn_default_normal_holo_light
                 getResources().getDrawable(R.drawable.round_but_red_sel)) //btn_default_pressed_holo_light
         {
@@ -108,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         this.infoButton.setOnTouchListener(infoButtonListener);
-        m_map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+        googleMap.setInfoWindowAdapter(new InfoWindowAdapter() {
             @Override
             public View getInfoWindow(Marker marker) {
                 return null;
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return infoWindow;
             }
         });
+
         flyTo(myCustomLocation(newYork, 15, 90));
     }
 
@@ -135,27 +137,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return (int) (dp * scale + 0.5f);
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_map:
-                if (mapReady)
-                    flyTo(myCustomLocation(dublin, 15, 10));
-                break;
-            case R.id.btn_hybrid:
-                if (mapReady)
-                    flyTo(myCustomLocation(seattle, 15, 10));
-                break;
-            case R.id.btn_satelite:
-                if (mapReady)
-                    flyTo(myCustomLocation(tokyo, 15, 40));
-                break;
-        }
-    }
 
     private void flyTo(CameraPosition target) {
 //        m_map.animateCamera(CameraUpdateFactory.newCameraPosition(target));
-        m_map.animateCamera(CameraUpdateFactory.newCameraPosition(target), 5000, null);
+        mMaps.animateCamera(CameraUpdateFactory.newCameraPosition(target), 5000, null);
     }
 
     @NonNull
