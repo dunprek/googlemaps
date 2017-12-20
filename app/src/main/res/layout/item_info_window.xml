@@ -16,11 +16,11 @@
             android:orientation="horizontal">
 
             <ImageView
+                android:id="@+id/iv_info"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginRight="8dp"
-                android:adjustViewBounds="true"
-                android:src="@mipmap/ic_launcher" />
+                android:adjustViewBounds="true" />
 
 
             <LinearLayout
